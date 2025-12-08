@@ -29,6 +29,12 @@
 - **Non-Blocking**: Implements asynchronous chunking to collect samples without freezing the main thread/UI.
 - **Configurable**: Adjustable CPU workload implementation and sampling parameters.
 
+### 🛡️ Security & Usage Guidelines (Important)
+
+- **Supplementary Use Only**: This library is designed to provide *additional* entropy on top of standard CSPRNGs. It should not be used as the sole source of randomness for sensitive cryptographic operations.
+- **Timer Resolution Risks**: Browser `performance.now()` resolution is often reduced (coarsened) or jittered by the browser to prevent side-channel attacks. This implementation attempts to mitigate this with heavy CPU loops, but the entropy quality is highly dependent on the browser and OS environment.
+- **Recommended Usage**: Always mix the output of this library with `window.crypto.getRandomValues()` (e.g., via XOR) to ensure defense-in-depth.
+
 ### Project Structure (Monorepo)
 This project is a monorepo managed by NPM Workspaces.
 
@@ -82,6 +88,12 @@ Run these commands from the root directory:
 - **ハイブリッドセキュリティ**: 生のジッターエントロピーをSHA-256ハッシュ関数で圧縮（コンディショニング）し、高品質な乱数を生成します。
 - **ノンブロッキング**: メインスレッドやUIをフリーズさせないよう、非同期で分割してサンプリングを行います。
 - **設定可能**: CPU負荷の強度やサンプリングパラメータを調整可能です。
+
+### 🛡️ セキュリティと利用ガイドライン (重要)
+
+- **補助的な利用を推奨**: 本ライブラリは、標準的な CSPRNG に対する「追加のエントロピー源」として提供されています。機密性の高い暗号操作において、単独の乱数源として使用することはお勧めしません。
+- **タイマー分解能のリスク**: ブラウザの `performance.now()` は、サイドチャネル攻撃対策として分解能が低下（粗粒化）されたり、人工的なノイズが付与されたりする場合があります。本実装は CPU 高負荷ループによって緩和を試みていますが、エントロピーの質はブラウザや OS 環境に強く依存します。
+- **推奨される使用法**: 防層防御の観点から、常に `window.crypto.getRandomValues()` の出力と（XORなどで）混合して使用することを強く推奨します。
 
 ### プロジェクト構成 (モノレポ)
 このプロジェクトは NPM Workspaces を用いたモノレポ構成です。

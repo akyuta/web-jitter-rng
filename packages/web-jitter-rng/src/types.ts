@@ -2,7 +2,7 @@ export interface JitterOptions {
     /**
      * Number of iterations for the CPU burn loop per sample.
      * Higher values increase CPU load and potential jitter.
-     * Default: 1000
+     * Default: 500000
      */
     iterations?: number;
 
