@@ -8,6 +8,12 @@
     "scripts": {
         "dev": "npm run dev -w web-jitter-rng-demo",
         "build": "npm run build -w web-jitter-rng-demo",
-        "test": "npm run test -w web-jitter-rng"
+        "test": "npm run test -w web-jitter-rng",
+        "quality-test": "tsx scripts/randomnessQualityTest.ts",
+        "quality-test:raw": "tsx scripts/randomnessQualityTest.ts --raw"
+    },
+    "devDependencies": {
+        "@types/node": "^24.10.1",
+        "tsx": "^4.21.0"
     }
 }

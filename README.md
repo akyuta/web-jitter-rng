@@ -78,6 +78,24 @@ Run these commands from the root directory:
   ```
   Runs the Vitest suite for the library.
 
+- **Run Quality Tests**:
+  ```bash
+  npm run quality-test
+  ```
+  Runs the rigorous statistical quality test using the [randomness](https://www.npmjs.com/package/randomness) package.
+  > [!NOTE]
+  > This generates >1,000,000 bits of entropy and runs NIST-based tests. It takes longer than unit tests.
+
+- **Run Raw Mode Quality Tests (Unconditioned)**:
+  ```bash
+  npm run quality-test:raw
+  # OR
+  npm run quality-test -- --raw
+  ```
+  Runs the tests against the **raw jitter** source (without SHA-256 conditioning).
+  > [!WARNING]
+  > Failures in Monobit/Frequency tests are **expected** in this mode due to inherent bias in the raw source. This mode is for validating that entropy collection is working, not for cryptographic statistical pass.
+
 ---
 
 <a name="japanese"></a>
@@ -137,3 +155,21 @@ const rawEntropy = await collectJitterBytes(32);
   npm run test
   ```
   ライブラリの Vitest テストスイートを実行します。
+
+- **品質テストの実行**:
+  ```bash
+  npm run quality-test
+  ```
+  [randomness](https://www.npmjs.com/package/randomness) パッケージを使用した、厳密な統計的品質テストを実行します。
+  > [!NOTE]
+  > 100万ビット以上のエントロピーを生成し、NISTベースの検定を行います。通常のユニットテストよりも時間がかかります。
+
+- **品質テスト（生データモード）の実行**:
+  ```bash
+  npm run quality-test:raw
+  # または
+  npm run quality-test -- --raw
+  ```
+  SHA-256によるコンディショニングを行わない、**生のジッターソース**に対して検定を行います。
+  > [!WARNING]
+  > このモードでは、生のソースに含まれるバイアスにより、MonobitテストやFrequencyテストが**失敗することが期待されます**。これは暗号学的な合格を目指すものではなく、エントロピー収集が機能していることを確認するためのモードです。
