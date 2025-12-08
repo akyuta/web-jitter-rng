@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Jitter RNG Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <header>
+                <h1>Web Jitter RNG</h1>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Browser-based True Random Number Generator
+                    using Jitter</p>
+            </header>
+
+            <div class="controls">
+                <button id="btn-sample">Start Sampling</button>
+                <button id="btn-extract" class="secondary" disabled>Extract Bits</button>
+                <button id="btn-download" class="secondary" disabled>Download CSV</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Min Δt</div>
+                    <div class="stat-value" id="val-min">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Max Δt</div>
+                    <div class="stat-value" id="val-max">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Δt</div>
+                    <div class="stat-value" id="val-avg">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Jitter (Var)</div>
+                    <div class="stat-value" id="val-jitter">-</div>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="output-header">
+                    <span class="output-title">Extracted Random Bits (Hex)</span>
+                    <span class="output-title" id="bit-count">0 bits</span>
+                </div>
+                <pre id="output-bits">Click "Start Sampling" to begin...</pre>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+{
+    "name": "web-jitter-rng-monorepo",
+    "private": true,
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
+    "scripts": {
+        "dev": "npm run dev -w web-jitter-rng-demo",
+        "build": "npm run build -w web-jitter-rng-demo",
+        "test": "npm run test -w web-jitter-rng"
+    }
+}
