@@ -5,8 +5,8 @@ const MATRIX_BACKWARD_ELIMINATION = 1;
 
 export const bitsToMatrix = (M: number, Q: number, bits: number[]): Matrix => {
   const matrix: Matrix = [];
-  for (let rowIndex = 0; rowIndex < Q; rowIndex++) {
-    const row = bits.slice(rowIndex * M, (rowIndex + 1) * M);
+  for (let rowIndex = 0; rowIndex < M; rowIndex++) {
+    const row = bits.slice(rowIndex * Q, (rowIndex + 1) * Q);
     matrix.push(row);
   }
   return matrix;
