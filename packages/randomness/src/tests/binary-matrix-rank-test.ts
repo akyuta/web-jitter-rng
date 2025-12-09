@@ -1,7 +1,7 @@
 import { RandomnessTest } from '../types';
 import { bitsToMatrix, computeRank } from '../utils/matrix';
 
-const test: RandomnessTest = (bits, M = 32, Q = 32, alpha = 0.01) => {
+const test: RandomnessTest = (bits, alpha = 0.01, M = 32, Q = 32) => {
   const n = bits.length;
   const N = Math.floor(n / (M * Q));
   if (N < 38) {
@@ -45,6 +45,7 @@ const test: RandomnessTest = (bits, M = 32, Q = 32, alpha = 0.01) => {
   let chiSquare = (FM - FR_prob * N) ** 2 / (FR_prob * N);
   chiSquare += (FMM - FRM1_prob * N) ** 2 / (FRM1_prob * N);
   chiSquare += (remainder - LR_prob * N) ** 2 / (LR_prob * N);
+
   const p = Math.E ** (-chiSquare / 2);
   const success = p >= alpha;
   return [success, p];
