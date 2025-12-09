@@ -47,6 +47,27 @@
                 </div>
             </div>
 
+            <div class="quality-test-section">
+                <div class="controls" style="margin-top: 2rem;">
+                    <button id="btn-quality-test" class="secondary" disabled>Run Quality Tests</button>
+                </div>
+                <div class="test-results" id="test-results" style="margin-top: 1rem; display: none;">
+                    <h3>Randomness Quality Tests (NIST SP 800-22)</h3>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Test Name</th>
+                                <th>P-Value</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="test-results-body">
+                            <!-- Results will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="output-section">
                 <div class="output-header">
                     <span class="output-title">Extracted Random Bits (Hex)</span>
