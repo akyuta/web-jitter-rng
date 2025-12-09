@@ -55,48 +55,27 @@ export async function getJitterRandom(
     options: JitterOptions = {}
 ): Promise<Uint8Array> {
     const factor = options.oversamplingFactor ?? 4;
-    const rawLength = byteLength * factor;
-
-    const rawBytes = await collectJitterBytes(rawLength, options);
-
-    // If requested length is small enough for a single hash
-    if (byteLength <= 32) {
-        const hashBuffer = await crypto.subtle.digest('SHA-256', rawBytes as unknown as BufferSource);
-        const hashBytes = new Uint8Array(hashBuffer);
-        return hashBytes.slice(0, byteLength);
-    }
-
-    // For lengths > 32, we chunk the raw bytes and hash each chunk.
-    // Each 32 bytes of output requires (32 * factor) raw bytes.
-    const outputBlockSize = 32;
-    const rawBlockSize = outputBlockSize * factor;
-
     const result = new Uint8Array(byteLength);
     let outputOffset = 0;
-    let rawOffset = 0;
 
+    // Loop to collect and hash in chunks (max 32 bytes output per chunk)
     while (outputOffset < byteLength) {
-        // Determine how many raw bytes to use for this block
-        // We want to generate up to 32 bytes of output.
-        // But we might be at the end.
+        // Determine output size for this iteration (max 32)
+        const chunkLength = Math.min(32, byteLength - outputOffset);
+        // Determine required raw bytes based on oversampling factor
+        const rawChunkLength = chunkLength * factor;
 
-        // Actually, simpler approach: 
-        // We already collected `rawLength` which is exactly `byteLength * factor`.
-        // So we can just take slices of `rawBlockSize` (or remaining) and hash them.
-        // Hashing always produces 32 bytes (or less if we slice).
+        // Collect raw jitter bytes for this chunk
+        const rawBytes = await collectJitterBytes(rawChunkLength, options);
 
-        const rawChunkSize = Math.min(rawBlockSize, rawBytes.length - rawOffset);
-        if (rawChunkSize <= 0) break; // Should not happen
-
-        const rawChunk = rawBytes.slice(rawOffset, rawOffset + rawChunkSize);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', rawChunk as unknown as BufferSource);
+        // Hash the raw bytes
+        const hashBuffer = await crypto.subtle.digest('SHA-256', rawBytes as unknown as BufferSource);
         const hashBytes = new Uint8Array(hashBuffer);
 
-        const needed = Math.min(outputBlockSize, byteLength - outputOffset);
-        result.set(hashBytes.slice(0, needed), outputOffset);
+        // Copy the needed bytes to the result
+        result.set(hashBytes.slice(0, chunkLength), outputOffset);
 
-        outputOffset += needed;
-        rawOffset += rawChunkSize;
+        outputOffset += chunkLength;
     }
 
     return result;
