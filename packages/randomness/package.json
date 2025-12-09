@@ -1,0 +1,27 @@
+{
+  "name": "randomness",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    },
+    "./worker": "./dist/worker.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.worker.json",
+    "test": "../../packages/web-jitter-rng/node_modules/.bin/vitest run"
+  },
+  "dependencies": {
+    "fft.js": "^4.0.4",
+    "mathjs": "^12.4.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}

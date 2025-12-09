@@ -12,6 +12,10 @@
         "quality-test": "tsx scripts/randomnessQualityTest.ts",
         "quality-test:raw": "tsx scripts/randomnessQualityTest.ts --raw"
     },
+    "dependencies": {
+        "fft.js": "^4.0.4",
+        "mathjs": "^12.4.2"
+    },
     "devDependencies": {
         "@types/node": "^24.10.1",
         "tsx": "^4.21.0"

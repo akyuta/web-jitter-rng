@@ -8,6 +8,8 @@ coverage/
 
 # Production
 dist/
+packages/randomness/lib/
+packages/randomness/dist/
 build/
 out/
 
