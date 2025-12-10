@@ -4,6 +4,9 @@ const MATRIX_FORWARD_ELIMINATION = 0;
 const MATRIX_BACKWARD_ELIMINATION = 1;
 
 export const bitsToMatrix = (M: number, Q: number, bits: number[]): Matrix => {
+  if (bits.length < M * Q) {
+    throw new Error(`Insufficient bits for matrix creation. Required: ${M * Q}, Provided: ${bits.length}`);
+  }
   const matrix: Matrix = [];
   for (let rowIndex = 0; rowIndex < M; rowIndex++) {
     const row = bits.slice(rowIndex * Q, (rowIndex + 1) * Q);
