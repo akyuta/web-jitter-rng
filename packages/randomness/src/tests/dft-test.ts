@@ -4,6 +4,10 @@ import { RandomnessTest } from '../types';
 
 const test: RandomnessTest = (bits, alpha = 0.01) => {
   const n = bits.length;
+  if (n < 1000) {
+    throw new Error('Too little data for test. Supply at least 1000 bits');
+  }
+
   const ts: number[] = [];
   const max = n % 2 === 0 ? n : n - 1;
   for (let i = 0; i < max; i++) {
@@ -20,7 +24,7 @@ const test: RandomnessTest = (bits, alpha = 0.01) => {
   fft.transform(output, input);
 
   const magnitudes: number[] = [];
-  for (let i = 0; i < ts.length; i++) {
+  for (let i = 0; i < ts.length / 2; i++) {
     const re = output[2 * i];
     const im = output[2 * i + 1];
     magnitudes.push(Math.sqrt(re * re + im * im));
