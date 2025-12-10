@@ -29,7 +29,7 @@ const test: RandomnessTest = (bits, alpha = 0.01) => {
     let sum = 0;
     for (let i = 0; i < 2 ** iteration; i++) {
       const ci = counts[i] / n;
-      if (ci) sum += ci * Math.log(ci / 10);
+      if (ci > 0) sum += ci * Math.log(ci);
     }
     phiM.push(sum);
   }
