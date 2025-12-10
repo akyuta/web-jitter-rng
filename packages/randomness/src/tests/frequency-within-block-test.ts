@@ -2,22 +2,23 @@ import { RandomnessTest } from '../types';
 import { gammaincc } from '../utils/gamma';
 import { getCounts } from '../utils/counter';
 
-const defaultBlockSize = 10;
-const blockNumberMax = 100;
 const sequenceSizeMin = 100;
 
-const test: RandomnessTest = (bits, alpha = 0.01) => {
+const test: RandomnessTest = (bits, alpha = 0.01, blockLength?: number) => {
   const n = bits.length;
   if (n < sequenceSizeMin) {
     throw new Error('Too little data for test. Supply at least 100 bits');
   }
 
-  let M = defaultBlockSize;
-  let N = Math.floor(n / M);
-  if (N > blockNumberMax) {
-    N = blockNumberMax - 1;
-    M = Math.floor(n / N);
+  let M = blockLength;
+  if (!M) {
+    M = Math.max(20, Math.ceil(0.01 * n));
+    if (Math.floor(n / M) >= 100) {
+      M = Math.ceil(n / 99);
+    }
   }
+
+  let N = Math.floor(n / M);
 
   const totalBlocks = N;
   const blockSize = M;
