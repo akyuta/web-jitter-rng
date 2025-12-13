@@ -25,4 +25,9 @@ describe('sampler', () => {
         // The main thing is it didn't crash or timeout.
         expect(end - start).toBeGreaterThan(0);
     });
+
+    it('sampleDeltas should throw on non-positive chunkSize', async () => {
+        await expect(sampleDeltas(10, { chunkSize: 0 })).rejects.toThrow(RangeError);
+        await expect(sampleDeltas(10, { chunkSize: 1.1 })).rejects.toThrow(TypeError);
+    });
 });

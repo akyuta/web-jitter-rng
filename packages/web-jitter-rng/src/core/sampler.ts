@@ -1,4 +1,5 @@
 import { JitterOptions } from '../types';
+import { validateJitterOptions, validateLength } from './validation';
 
 /**
  * CPU burn loop to increase load and induce jitter.
@@ -35,8 +36,19 @@ export async function sampleDeltas(
     count: number,
     options: JitterOptions = {}
 ): Promise<Float64Array> {
+    validateLength('count', count, 1);
+    validateJitterOptions(options);
+
     const iterations = options.iterations ?? 500000;
     const chunkSize = options.chunkSize ?? 100;
+
+    if (!Number.isInteger(chunkSize)) {
+        throw new TypeError('chunkSize must be an integer');
+    }
+
+    if (chunkSize <= 0) {
+        throw new RangeError('chunkSize must be >= 1');
+    }
 
     const result = new Float64Array(count);
     let collected = 0;

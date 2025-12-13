@@ -47,4 +47,17 @@ describe('RNG', () => {
         // Byte 33 should ALSO be 0xBB, verifying the loop correctly continued and hashed
         expect(bytes[32]).toBe(0xBB);
     });
+
+    it('getJitterRandom should throw on invalid oversamplingFactor', async () => {
+        await expect(getJitterRandom(16, { oversamplingFactor: 0 })).rejects.toThrow(RangeError);
+        await expect(getJitterRandom(16, { oversamplingFactor: 1.5 })).rejects.toThrow(TypeError);
+    });
+
+    it('collectJitterBytes should validate input options', async () => {
+        await expect(collectJitterBytes(0)).rejects.toThrow(RangeError);
+        await expect(collectJitterBytes(1, { windowSize: 1 })).rejects.toThrow(RangeError);
+        await expect(collectJitterBytes(1, { windowSize: 0 })).rejects.toThrow(RangeError);
+        await expect(collectJitterBytes(1, { scale: 0 })).rejects.toThrow(RangeError);
+        await expect(collectJitterBytes(1, { scale: -1 })).rejects.toThrow(RangeError);
+    });
 });
