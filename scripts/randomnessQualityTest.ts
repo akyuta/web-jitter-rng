@@ -12,16 +12,22 @@ async function runQualityTest() {
     const args = process.argv.slice(2);
     // Parse arguments
     const isRaw = args.includes('--raw');
+    const noHealthCheck = args.includes('--no-health-check');
     const sizeArgIndex = args.findIndex(a => !a.startsWith('--'));
     const argBytes = sizeArgIndex !== -1 ? parseInt(args[sizeArgIndex], 10) : 125000;
     const TARGET_BYTES = isNaN(argBytes) ? 125000 : argBytes;
 
     console.log(`Mode: ${isRaw ? 'RAW JITTER (Unconditioned)' : 'SECURE (SHA-256 Conditioned)'}`);
+    console.log(`Health Check: ${noHealthCheck ? 'DISABLED' : 'ENABLED'}`);
     console.log(`Generating ${(TARGET_BYTES * 8).toLocaleString()} bits (${TARGET_BYTES.toLocaleString()} bytes) of random data...`);
     console.log(`Target Bytes: ${TARGET_BYTES}`);
 
     if (isRaw) {
         console.warn('⚠️  WARNING: Testing raw jitter. Expect fail on Monobit/Frequency tests due to bias. This is expected behavior for raw TRNG sources.');
+    }
+
+    if (noHealthCheck) {
+        console.warn('⚠️  WARNING: Health check disabled. Entropy quality is not verified.');
     }
 
     const startTime = performance.now();
@@ -34,10 +40,11 @@ async function runQualityTest() {
 
     // Select generator function
     const generateChunk = async (size: number) => {
+        const options = { healthCheck: !noHealthCheck };
         if (isRaw) {
-            return await collectJitterBytes(size);
+            return await collectJitterBytes(size, options);
         } else {
-            return await getJitterRandom(size);
+            return await getJitterRandom(size, options);
         }
     };
 

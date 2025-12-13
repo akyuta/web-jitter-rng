@@ -10,7 +10,8 @@
         "build": "npm run build -w web-jitter-rng-demo",
         "test": "node scripts/patch-rollup-fallback.js && npm run build -w randomness && npm run test -w web-jitter-rng",
         "quality-test": "tsx scripts/randomnessQualityTest.ts",
-        "quality-test:raw": "tsx scripts/randomnessQualityTest.ts --raw"
+        "quality-test:raw": "tsx scripts/randomnessQualityTest.ts --raw",
+        "quality-test:no-health": "tsx scripts/randomnessQualityTest.ts --no-health-check"
     },
     "dependencies": {
         "fft.js": "^4.0.4",
