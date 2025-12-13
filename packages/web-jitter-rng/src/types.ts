@@ -31,4 +31,28 @@ export interface JitterOptions {
      * Default: 100
      */
     chunkSize?: number;
+
+    /**
+     * Enable or disable health checking of collected deltas.
+     * Default: true
+     */
+    healthCheck?: boolean;
+
+    /**
+     * Minimum acceptable unique-rate of quantized samples.
+     * Default: 0.05
+     */
+    minUniqueRate?: number;
+
+    /**
+     * Maximum acceptable zero-difference rate between consecutive quantized samples.
+     * Default: 0.6
+     */
+    maxZeroDiffRate?: number;
+
+    /**
+     * Minimum acceptable runs rate for sign bits of diffs.
+     * Default: 0.02
+     */
+    minRunsRate?: number;
 }
