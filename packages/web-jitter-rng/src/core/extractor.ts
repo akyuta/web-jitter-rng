@@ -20,13 +20,17 @@ export class JitterCollector {
     }
 
     /**
-     * Estimates the median of the rolling window.
+     * Estimates twice the median of the rolling window (median * 2).
      * Uses the pre-sorted window for O(1) access.
      */
-    private getMedian(): number {
-        if (this.sortedWindow.length === 0) return 0;
-        const mid = Math.floor(this.sortedWindow.length / 2);
-        return this.sortedWindow[mid];
+    private getMedian2x(): number {
+        const len = this.sortedWindow.length;
+        if (len === 0) return 0;
+        const mid = len >>> 1;
+        if (len & 1) {
+            return this.sortedWindow[mid] * 2;
+        }
+        return this.sortedWindow[mid - 1] + this.sortedWindow[mid];
     }
 
     /**
@@ -86,12 +90,12 @@ export class JitterCollector {
         }
 
         const d = q - this.prevQ;
-        const medianQ = this.getMedian();
+        const median2x = this.getMedian2x();
 
         // 3-bit extraction
         const signBit = d > 0 ? 1 : 0;
         const absLsbBit = (Math.abs(d) & 1) ? 1 : 0;
-        const threshBit = q > medianQ ? 1 : 0;
+        const threshBit = (2 * q > median2x) ? 1 : 0;
 
         // Add bits to buffer
         this.bitBuffer.push(signBit, absLsbBit, threshBit);
