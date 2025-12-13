@@ -3,28 +3,48 @@ import { JitterCollector } from './extractor';
 import { JitterOptions } from '../types';
 import { validateJitterOptions, validateLength } from './validation';
 
-/**
- * Collects raw jitter bytes using time-jitter entropy.
- * This is the lower-level API providing unconditioned entropy.
- */
-export async function collectJitterBytes(
+const DEFAULT_INFO = new TextEncoder().encode('web-jitter-rng conditioned output');
+
+async function hmac(key: CryptoKey, data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
+    const sig = await crypto.subtle.sign('HMAC', key, data);
+    return new Uint8Array(sig);
+}
+
+async function importHmacKey(keyData: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
+    return crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+}
+
+async function hkdfExpand(key: CryptoKey, length: number, info: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
+    const okm = new Uint8Array(length);
+    let prev: Uint8Array<ArrayBuffer> = new Uint8Array(0);
+    let offset = 0;
+    let counter = 1;
+
+    while (offset < length) {
+        const input = new Uint8Array(prev.length + info.length + 1);
+        input.set(prev, 0);
+        input.set(info, prev.length);
+        input[input.length - 1] = counter;
+
+        prev = await hmac(key, input);
+        const chunk = Math.min(prev.length, length - offset);
+        okm.set(prev.slice(0, chunk), offset);
+        offset += chunk;
+        counter++;
+    }
+
+    return okm;
+}
+
+async function collectRawJitterBytes(
     byteLength: number,
-    options: JitterOptions = {}
-): Promise<Uint8Array> {
+    options: JitterOptions = {},
+): Promise<Uint8Array<ArrayBuffer>> {
     validateLength('byteLength', byteLength, 1);
     validateJitterOptions(options);
 
     const collector = new JitterCollector(options);
-
-    // Calculate roughly how many samples we need.
-    // We get 3 bits per sample.
-    // const neededBits = byteLength * 8;
     const bitsPerSample = 3;
-    // const estimatedSamples = Math.ceil(neededBits / bitsPerSample) + 50; // buffer (Used dynamically in loop)
-
-    // In a real loop, we might need more passes if estimatedSamples wasn't enough due to buffering,
-    // but for simplicity we'll just ask for a chunk and then check.
-    // If not enough, we loop.
 
     while (collector.byteLength < byteLength) {
         const remainingBytes = byteLength - collector.byteLength;
@@ -34,70 +54,54 @@ export async function collectJitterBytes(
 
         for (let i = 0; i < deltas.length; i++) {
             collector.addSample(deltas[i]);
-            // Optimization: could break early if enough bytes
             if (collector.byteLength >= byteLength) break;
         }
     }
 
-    return collector.getBytes().slice(0, byteLength);
+    const result = collector.getBytes().slice(0, byteLength);
+    return new Uint8Array(result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength));
+}
+
+async function deriveKeyFromRaw(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    return importHmacKey(new Uint8Array(digest));
 }
 
 /**
- * Generates cryptographically strong random bytes seeded by jitter.
- * Uses oversampling and SHA-256 hashing.
- * 
- * @warning **This is a Proof of Concept (PoC). NOT a certified CSPRNG.**
- * Do not use this for critical key generation (e.g. wallet generation, production server keys).
- * Use `window.crypto.getRandomValues` for standard cryptographic needs.
- * 
- * @warning **これは概念実証 (PoC) であり、認証された CSPRNG ではありません。**
- * ウォレット生成や本番サーバーの鍵生成など、クリティカルな用途には使用しないでください。
- * 標準的な暗号化用途には `window.crypto.getRandomValues` を使用してください。
+ * Collects conditioned jitter bytes using HMAC-based expansion from a single entropy harvest.
+ * @warning Proof of Concept only. Do not rely on this alone for cryptographic key generation.
  */
-export async function getJitterRandom(
+export async function collectJitterBytes(
     byteLength: number,
-    options: JitterOptions = {}
+    options: JitterOptions = {},
 ): Promise<Uint8Array> {
     validateLength('byteLength', byteLength, 1);
     validateJitterOptions(options);
 
     const factor = options.oversamplingFactor ?? 4;
-
     if (!Number.isInteger(factor)) {
         throw new TypeError('oversamplingFactor must be an integer');
     }
-
     if (factor < 1) {
         throw new RangeError('oversamplingFactor must be >= 1');
     }
-    const result = new Uint8Array(byteLength);
-    let outputOffset = 0;
 
-    // Loop to collect and hash in chunks (max 32 bytes output per chunk)
-    while (outputOffset < byteLength) {
-        // Determine output size for this iteration (max 32)
-        const chunkLength = Math.min(32, byteLength - outputOffset);
-        // Determine required raw bytes based on oversampling factor
-        const rawChunkLength = chunkLength * factor;
+    const rawSeedLength = Math.max(32, factor * 32);
+    const rawSeed = await collectRawJitterBytes(rawSeedLength, options);
+    const key = await deriveKeyFromRaw(rawSeed);
 
-        if (rawChunkLength <= 0) {
-            throw new RangeError('rawChunkLength must be >= 1');
-        }
+    return hkdfExpand(key, byteLength, DEFAULT_INFO);
+}
 
-        // Collect raw jitter bytes for this chunk
-        const rawBytes = await collectJitterBytes(rawChunkLength, options);
-
-        // Hash the raw bytes
-        const hashBuffer = await crypto.subtle.digest('SHA-256', rawBytes as unknown as BufferSource);
-        const hashBytes = new Uint8Array(hashBuffer);
-
-        // Copy the needed bytes to the result
-        result.set(hashBytes.slice(0, chunkLength), outputOffset);
-
-        outputOffset += chunkLength;
-    }
-
-    return result;
+/**
+ * Generates conditioned random bytes using jitter entropy.
+ * Alias to collectJitterBytes for compatibility.
+ */
+export async function getJitterRandom(
+    byteLength: number,
+    options: JitterOptions = {},
+): Promise<Uint8Array> {
+    return collectJitterBytes(byteLength, options);
 }
 
 /**
@@ -105,10 +109,7 @@ export async function getJitterRandom(
  * or just a helper for standard 256-bit key generation.
  */
 export async function jitterRandom256(
-    options: JitterOptions = {}
+    options: JitterOptions = {},
 ): Promise<Uint8Array> {
     return getJitterRandom(32, options);
 }
-
-// Removing hybridRandom256 for now as it wasn't requested in redesign explicitly
-// and simplifies the focus, but if needed it can be re-added easily using getJitterRandom.
