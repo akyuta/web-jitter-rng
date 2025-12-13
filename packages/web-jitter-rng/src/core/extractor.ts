@@ -1,4 +1,5 @@
 import { JitterOptions } from '../types';
+import { validateJitterOptions } from './validation';
 
 export class JitterCollector {
     private prevQ: number | null = null;
@@ -12,6 +13,8 @@ export class JitterCollector {
     private windowSize: number;
 
     constructor(options: JitterOptions = {}) {
+        validateJitterOptions(options);
+
         this.scale = options.scale ?? 1000;
         this.windowSize = options.windowSize ?? 256;
     }

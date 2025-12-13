@@ -8,7 +8,7 @@
     "scripts": {
         "dev": "npm run dev -w web-jitter-rng-demo",
         "build": "npm run build -w web-jitter-rng-demo",
-        "test": "npm run test -w web-jitter-rng",
+        "test": "node scripts/patch-rollup-fallback.js && npm run build -w randomness && npm run test -w web-jitter-rng",
         "quality-test": "tsx scripts/randomnessQualityTest.ts",
         "quality-test:raw": "tsx scripts/randomnessQualityTest.ts --raw"
     },

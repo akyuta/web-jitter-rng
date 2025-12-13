@@ -1,6 +1,7 @@
 import { sampleDeltas } from './sampler';
 import { JitterCollector } from './extractor';
 import { JitterOptions } from '../types';
+import { validateJitterOptions, validateLength } from './validation';
 
 /**
  * Collects raw jitter bytes using time-jitter entropy.
@@ -10,6 +11,9 @@ export async function collectJitterBytes(
     byteLength: number,
     options: JitterOptions = {}
 ): Promise<Uint8Array> {
+    validateLength('byteLength', byteLength, 1);
+    validateJitterOptions(options);
+
     const collector = new JitterCollector(options);
 
     // Calculate roughly how many samples we need.
@@ -54,7 +58,18 @@ export async function getJitterRandom(
     byteLength: number,
     options: JitterOptions = {}
 ): Promise<Uint8Array> {
+    validateLength('byteLength', byteLength, 1);
+    validateJitterOptions(options);
+
     const factor = options.oversamplingFactor ?? 4;
+
+    if (!Number.isInteger(factor)) {
+        throw new TypeError('oversamplingFactor must be an integer');
+    }
+
+    if (factor < 1) {
+        throw new RangeError('oversamplingFactor must be >= 1');
+    }
     const result = new Uint8Array(byteLength);
     let outputOffset = 0;
 
@@ -64,6 +79,10 @@ export async function getJitterRandom(
         const chunkLength = Math.min(32, byteLength - outputOffset);
         // Determine required raw bytes based on oversampling factor
         const rawChunkLength = chunkLength * factor;
+
+        if (rawChunkLength <= 0) {
+            throw new RangeError('rawChunkLength must be >= 1');
+        }
 
         // Collect raw jitter bytes for this chunk
         const rawBytes = await collectJitterBytes(rawChunkLength, options);
