@@ -25,7 +25,7 @@
 
 ### Features
 - **True Randomness Source**: Uses CPU jitter (micro-timing variations) as the source of entropy.
-- **Hybrid Security**: Combines raw jitter entropy with SHA-256 hashing (Conditioning) to produce high-quality random output.
+- **Hybrid Security**: Conditions jitter entropy with hashing + HMAC-based expansion to produce high-quality random output without exposing raw bytes.
 - **Non-Blocking**: Implements asynchronous chunking to collect samples without freezing the main thread/UI.
 - **Configurable**: Adjustable CPU workload implementation and sampling parameters.
 
@@ -34,6 +34,7 @@
 - **Supplementary Use Only**: This library is designed to provide *additional* entropy on top of standard CSPRNGs. It should not be used as the sole source of randomness for sensitive cryptographic operations.
 - **Timer Resolution Risks**: Browser `performance.now()` resolution is often reduced (coarsened) or jittered by the browser to prevent side-channel attacks. This implementation attempts to mitigate this with heavy CPU loops, but the entropy quality is highly dependent on the browser and OS environment.
 - **Recommended Usage**: Always mix the output of this library with `window.crypto.getRandomValues()` (e.g., via XOR) to ensure defense-in-depth.
+- **Health Checks**: The collector runs lightweight health checks on the sampled jitter. Environments with coarse timers may fail these checks and will throw rather than silently returning biased output.
 
 ### Project Structure (Monorepo)
 This project is a monorepo managed by NPM Workspaces.
@@ -47,14 +48,14 @@ This project is a monorepo managed by NPM Workspaces.
 ```typescript
 import { getJitterRandom, collectJitterBytes } from 'web-jitter-rng';
 
-// 1. Get conditioned random bytes (SHA-256 hashed)
+// 1. Get conditioned random bytes (HKDF/HMAC conditioned)
 // Recommended for most use cases needing high quality randomness.
-const secureBytes = await getJitterRandom(32); 
+const secureBytes = await getJitterRandom(32);
 console.log(secureBytes);
 
-// 2. Get raw jitter bytes (Unconditioned)
-// Useful for analyzing the raw entropy source.
-const rawEntropy = await collectJitterBytes(32);
+// 2. Collect conditioned entropy directly (alias for getJitterRandom)
+// Raw jitter bytes are intentionally NOT exposed to avoid misuse.
+const conditioned = await collectJitterBytes(32);
 ```
 
 ### Development
@@ -86,6 +87,16 @@ Run these commands from the root directory:
   > [!NOTE]
   > This generates >1,000,000 bits of entropy and runs NIST-based tests. It takes longer than unit tests.
 
+- **Run Quality Tests (Without Health Check)**:
+  ```bash
+  npm run quality-test:no-health
+  # OR
+  npm run quality-test -- --no-health-check
+  ```
+  Runs quality tests with health checks disabled. Use this if health checks frequently fail on your system.
+  > [!WARNING]
+  > Health checks verify entropy quality. Disabling them may allow tests to run on low-quality entropy sources.
+
 - **Run Raw Mode Quality Tests (Unconditioned)**:
   ```bash
   npm run quality-test:raw
@@ -103,7 +114,7 @@ Run these commands from the root directory:
 
 ### 特徴
 - **真性乱数ソース**: CPUジッター（微細なタイミングの変動）をエントロピー源として使用します。
-- **ハイブリッドセキュリティ**: 生のジッターエントロピーをSHA-256ハッシュ関数で圧縮（コンディショニング）し、高品質な乱数を生成します。
+- **ハイブリッドセキュリティ**: 生のジッターエントロピーをハッシュ + HMAC 拡張でコンディショニングし、高品質な乱数を生成します。生データは誤用防止のため公開しません。
 - **ノンブロッキング**: メインスレッドやUIをフリーズさせないよう、非同期で分割してサンプリングを行います。
 - **設定可能**: CPU負荷の強度やサンプリングパラメータを調整可能です。
 
@@ -112,6 +123,7 @@ Run these commands from the root directory:
 - **補助的な利用を推奨**: 本ライブラリは、標準的な CSPRNG に対する「追加のエントロピー源」として提供されています。機密性の高い暗号操作において、単独の乱数源として使用することはお勧めしません。
 - **タイマー分解能のリスク**: ブラウザの `performance.now()` は、サイドチャネル攻撃対策として分解能が低下（粗粒化）されたり、人工的なノイズが付与されたりする場合があります。本実装は CPU 高負荷ループによって緩和を試みていますが、エントロピーの質はブラウザや OS 環境に強く依存します。
 - **推奨される使用法**: 防層防御の観点から、常に `window.crypto.getRandomValues()` の出力と（XORなどで）混合して使用することを強く推奨します。
+- **ヘルスチェック**: サンプル系列に対して簡易なヘルスチェックを行います。タイマー分解能が粗い環境ではチェックに失敗し、バイアスのある出力を返す代わりに例外を投げます。
 
 ### プロジェクト構成 (モノレポ)
 このプロジェクトは NPM Workspaces を用いたモノレポ構成です。
@@ -125,14 +137,14 @@ Run these commands from the root directory:
 ```typescript
 import { getJitterRandom, collectJitterBytes } from 'web-jitter-rng';
 
-// 1. コンディショニング済み乱数の取得 (SHA-256ハッシュ化)
+// 1. コンディショニング済み乱数の取得 (HKDF/HMAC)
 // 高品質な乱数が必要なほとんどのケースで推奨されます。
-const secureBytes = await getJitterRandom(32); 
+const secureBytes = await getJitterRandom(32);
 console.log(secureBytes);
 
-// 2. 生のジッターバイトの取得 (非圧縮)
-// 生のエントロピー源を解析したい場合に利用します。
-const rawEntropy = await collectJitterBytes(32);
+// 2. コンディショニング済みエントロピーの直接取得（getJitterRandom と同等）
+// 生のジッターバイトは誤用防止のため公開していません。
+const conditioned = await collectJitterBytes(32);
 ```
 
 ### 開発
@@ -163,6 +175,16 @@ const rawEntropy = await collectJitterBytes(32);
   [randomness](https://www.npmjs.com/package/randomness) パッケージを使用した、厳密な統計的品質テストを実行します。
   > [!NOTE]
   > 100万ビット以上のエントロピーを生成し、NISTベースの検定を行います。通常のユニットテストよりも時間がかかります。
+
+- **品質テスト（ヘルスチェック無効）の実行**:
+  ```bash
+  npm run quality-test:no-health
+  # または
+  npm run quality-test -- --no-health-check
+  ```
+  ヘルスチェックを無効にして品質テストを実行します。ヘルスチェックが頻繁に失敗する環境で使用してください。
+  > [!WARNING]
+  > ヘルスチェックはエントロピーの品質を検証します。無効化すると、低品質なエントロピー源でもテストが実行される可能性があります。
 
 - **品質テスト（生データモード）の実行**:
   ```bash
