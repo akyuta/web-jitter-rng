@@ -1,5 +1,11 @@
 import { JitterOptions } from '../types';
 import { validateJitterOptions, validateLength } from './validation';
+import { runHealthTests } from './health';
+
+// Module-level sink used to accumulate burn() results.
+// This prevents aggressive optimizers/JITs from eliminating the burn loop
+// under the assumption that its result is unused.
+let burnSink = 0;
 
 /**
  * CPU burn loop to increase load and induce jitter.
@@ -20,7 +26,7 @@ function burn(iterations: number): number {
  */
 export function measureOne(iterations: number): number {
     const t0 = performance.now();
-    burn(iterations);
+    burnSink ^= burn(iterations);
     const t1 = performance.now();
     return t1 - t0;
 }
@@ -65,6 +71,8 @@ export async function sampleDeltas(
             await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
+
+    runHealthTests(result, options);
 
     return result;
 }

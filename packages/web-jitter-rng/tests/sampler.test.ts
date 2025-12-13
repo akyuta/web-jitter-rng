@@ -9,7 +9,7 @@ describe('sampler', () => {
 
     it('sampleDeltas should return requested number of samples', async () => {
         const count = 50;
-        const deltas = await sampleDeltas(count, { iterations: 100 });
+        const deltas = await sampleDeltas(count, { iterations: 100, healthCheck: false });
         expect(deltas.length).toBe(count);
         expect(deltas[0]).toBeGreaterThan(0);
     });
@@ -18,7 +18,7 @@ describe('sampler', () => {
         // Ideally we would mock timers or performace, but for basic check:
         const start = performance.now();
         // Ask for enough samples to trigger chunking (default chunk 100)
-        await sampleDeltas(150, { iterations: 100, chunkSize: 50 });
+        await sampleDeltas(150, { iterations: 100, chunkSize: 50, healthCheck: false });
         const end = performance.now();
 
         // It should have taken at least some time, and returned successfully.
