@@ -1,0 +1,26 @@
+{
+    "name": "web-jitter-rng-monorepo",
+    "author": "Sano Yutaka",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/akyuta/web-jitter-rng.git"
+    },
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
+    "scripts": {
+        "dev": "npm run dev -w web-jitter-rng-demo",
+        "build": "npm run build -w web-jitter-rng-demo",
+        "test": "node scripts/patch-rollup-fallback.js && npm run build -w nist-randomness-tests && npm run test -w web-jitter-rng",
+        "test:integration": "npm run test:integration -w web-jitter-rng",
+        "quality-test": "tsx scripts/randomnessQualityTest.ts",
+        "quality-test:no-health": "tsx scripts/randomnessQualityTest.ts --no-health-check"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@types/node": "^24.10.1",
+        "tsx": "^4.21.0"
+    }
+}
